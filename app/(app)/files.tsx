@@ -197,8 +197,8 @@ export default function FilesScreen() {
                 </View>
                 <Text style={styles.openMark}>›</Text>
               </Pressable>
-              <Pressable accessibilityLabel={`More actions for ${folder.name}`} onPress={() => setSelectedFolder(folder)} style={styles.iconAction}>
-                <Text style={styles.iconActionText}>•••</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel={`More actions for ${folder.name}`} onPress={() => setSelectedFolder(folder)} style={({ pressed }) => [styles.rowAction, pressed ? styles.rowActionPressed : null]}>
+                <Text style={styles.rowActionText}>More</Text>
               </Pressable>
             </View>
           ))}
@@ -211,11 +211,8 @@ export default function FilesScreen() {
                 <Text numberOfLines={1} style={styles.fileName}>{file.name}</Text>
                 <Text style={styles.fileMeta}>{formatBytes(Number(file.sizeBytes))} · {formatDate(file.createdAt)}</Text>
               </Pressable>
-              <Pressable accessibilityLabel={`${file.isFavorite ? "Remove" : "Add"} ${file.name} ${file.isFavorite ? "from" : "to"} favourites`} onPress={() => toggleFavorite.mutate({ id: file.id, value: !file.isFavorite })} style={styles.iconAction}>
-                <Text style={[styles.iconActionText, file.isFavorite ? styles.favoriteMark : null]}>{file.isFavorite ? "★" : "☆"}</Text>
-              </Pressable>
-              <Pressable accessibilityLabel={`More actions for ${file.name}`} onPress={() => setSelectedFile(file)} style={styles.iconAction}>
-                <Text style={styles.iconActionText}>•••</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel={`More actions for ${file.name}`} onPress={() => setSelectedFile(file)} style={({ pressed }) => [styles.rowAction, pressed ? styles.rowActionPressed : null]}>
+                <Text style={styles.rowActionText}>More</Text>
               </Pressable>
             </View>
           ))}
@@ -247,7 +244,13 @@ export default function FilesScreen() {
                 <Text style={styles.sheetMeta}>Added {formatDate(selectedFile.createdAt)}</Text>
               </>
             ) : null}
-            <View style={styles.sheetActions}>
+            <ScrollView
+              contentContainerStyle={styles.sheetActions}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={false}
+              style={styles.sheetActionScroll}
+            >
               <SheetAction label={downloadingFile === selectedFile?.id ? "Preparing preview…" : "Preview"} disabled={Boolean(downloadingFile)} onPress={() => {
                 if (selectedFile) void openDownloadedFile(selectedFile, true);
                 setSelectedFile(null);
@@ -264,13 +267,11 @@ export default function FilesScreen() {
                 if (selectedFile) toggleFavorite.mutate({ id: selectedFile.id, value: !selectedFile.isFavorite });
                 setSelectedFile(null);
               }} />
-              <SheetAction label="Rename file · not supported by API" disabled />
-              <SheetAction label="Move file · not supported by API" disabled />
               <SheetAction danger label="Move to Recycle Bin" onPress={() => {
                 if (selectedFile) confirmTrash(selectedFile.id, selectedFile.name);
                 setSelectedFile(null);
               }} />
-            </View>
+            </ScrollView>
             <Pressable onPress={() => setSelectedFile(null)} style={styles.sheetClose}><Text style={styles.sheetCloseText}>Close</Text></Pressable>
           </View>
         </View>
@@ -304,7 +305,7 @@ function formatDate(value: string): string {
 
 function SheetAction({ label, onPress, disabled = false, danger = false }: { label: string; onPress?: () => void; disabled?: boolean; danger?: boolean }) {
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={[styles.sheetAction, disabled ? styles.sheetActionDisabled : null]}>
+    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.sheetAction, disabled ? styles.sheetActionDisabled : null, pressed && !disabled ? styles.sheetActionPressed : null]}>
       <Text style={[styles.sheetActionText, danger ? styles.sheetDanger : null, disabled ? styles.sheetActionTextDisabled : null]}>{label}</Text>
       {!disabled ? <Text style={[styles.sheetChevron, danger ? styles.sheetDanger : null]}>›</Text> : null}
     </Pressable>
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 36,
+    paddingBottom: 64,
     gap: 18,
   },
   header: {
@@ -398,30 +399,45 @@ const styles = StyleSheet.create({
   retryText: { color: colors.greenDark, fontWeight: "700", fontSize: 13 },
   footerLink: { marginTop: 4 },
   openMark: { color: colors.muted, fontSize: 25, marginLeft: 4 },
-  iconAction: { padding: 5 },
-  iconActionText: { color: colors.muted, fontSize: 20 },
-  favoriteMark: { color: colors.green },
+  rowAction: {
+    minWidth: 54,
+    minHeight: 44,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.greenWash,
+    paddingHorizontal: 10,
+  },
+  rowActionPressed: { backgroundColor: colors.green, borderColor: colors.green },
+  rowActionText: { color: colors.greenDark, fontSize: 12, fontWeight: "700" },
   downloadStatus: { color: colors.greenDark, fontSize: 12, fontWeight: "700" },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(12, 31, 24, 0.42)" },
-  actionSheet: { maxHeight: "92%", backgroundColor: colors.background, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24, gap: 9 },
+  actionSheet: { width: "100%", maxHeight: "90%", backgroundColor: colors.background, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24, gap: 9 },
   grabber: { width: 42, height: 4, borderRadius: 4, backgroundColor: colors.line, alignSelf: "center", marginBottom: 3 },
   sheetKicker: { color: colors.greenDark, fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
   sheetTitle: { color: colors.ink, fontSize: 21, lineHeight: 27, fontWeight: "700" },
   sheetMeta: { color: colors.muted, fontSize: 12 },
-  sheetActions: { gap: 7, marginTop: 6 },
-  sheetAction: { minHeight: 44, borderRadius: 12, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sheetActionScroll: { flexShrink: 1 },
+  sheetActions: { gap: 8, paddingTop: 6, paddingBottom: 4 },
+  sheetAction: { width: "100%", minHeight: 48, borderRadius: 13, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sheetActionPressed: { backgroundColor: colors.greenWash, borderColor: colors.green },
   sheetActionDisabled: { backgroundColor: colors.background },
-  sheetActionText: { color: colors.ink, fontSize: 13, fontWeight: "700" },
+  sheetActionText: { flex: 1, minWidth: 0, color: colors.ink, fontSize: 13, fontWeight: "700" },
   sheetActionTextDisabled: { color: colors.muted },
   sheetDanger: { color: colors.red },
-  sheetChevron: { color: colors.muted, fontSize: 20 },
+  sheetChevron: { flexShrink: 0, color: colors.muted, fontSize: 20 },
   sheetClose: { alignItems: "center", paddingVertical: 9 },
   sheetCloseText: { color: colors.ink, fontSize: 13, fontWeight: "700" },
   fileList: {
     gap: 12,
   },
-  fileOpen: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
+  fileOpen: { flex: 1, minWidth: 0, flexShrink: 1, flexDirection: "row", alignItems: "center", gap: 12 },
   fileRow: {
+    width: "100%",
+    minWidth: 0,
     backgroundColor: colors.surface,
     borderColor: colors.line,
     borderWidth: 1,
@@ -437,6 +453,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   fileTone: {
     backgroundColor: colors.greenWash,
@@ -452,6 +469,8 @@ const styles = StyleSheet.create({
   },
   fileCopy: {
     flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
     gap: 4,
   },
   fileName: {

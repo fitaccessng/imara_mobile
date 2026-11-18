@@ -100,12 +100,17 @@ export function FolderActionSheet({ folder, onClose, onChanged }: Props) {
           </View>
           {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
           {mode === "actions" ? (
-            <View style={styles.actions}>
+            <ScrollView
+              contentContainerStyle={styles.actions}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={false}
+              style={styles.actionList}
+            >
               <ActionButton label={folder.isFavorite ? "Remove from favourites" : "Add to favourites"} onPress={() => favorite.mutate()} disabled={busy} />
               <ActionButton label="Move folder" onPress={() => { setError(""); setMode("move"); }} disabled={busy} />
               <ActionButton label="Rename folder" onPress={() => { setError(""); setMode("rename"); }} disabled={busy} />
               <ActionButton danger label="Delete folder" onPress={confirmDelete} disabled={busy} />
-            </View>
+            </ScrollView>
           ) : mode === "rename" ? (
             <View style={styles.form}>
               <Text style={styles.label}>New folder name</Text>
@@ -154,7 +159,7 @@ export function FolderActionSheet({ folder, onClose, onChanged }: Props) {
 
 function ActionButton({ label, onPress, disabled, danger = false }: { label: string; onPress: () => void; disabled: boolean; danger?: boolean }) {
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={styles.actionButton}>
+    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, pressed && !disabled ? styles.actionButtonPressed : null]}>
       <Text style={[styles.actionText, danger ? styles.deleteText : null]}>{label}</Text>
       <Text style={[styles.chevron, danger ? styles.deleteText : null]}>›</Text>
     </Pressable>
@@ -185,7 +190,7 @@ function folderDepth(folder: PersonalFolder, folders: PersonalFolder[]): number 
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(12, 31, 24, 0.42)" },
-  sheet: { maxHeight: "88%", backgroundColor: colors.background, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 22, paddingTop: 10, paddingBottom: 26, gap: 15 },
+  sheet: { width: "100%", maxHeight: "90%", backgroundColor: colors.background, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 22, paddingTop: 10, paddingBottom: 26, gap: 15 },
   grabber: { width: 42, height: 4, borderRadius: 4, backgroundColor: colors.line, alignSelf: "center", marginBottom: 3 },
   heading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headingCopy: { flex: 1, gap: 5, marginRight: 10 },
@@ -194,10 +199,12 @@ const styles = StyleSheet.create({
   close: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   closeText: { color: colors.ink, fontSize: 25, lineHeight: 28 },
   error: { color: colors.red, fontSize: 13, lineHeight: 18 },
-  actions: { gap: 8 },
-  actionButton: { minHeight: 48, borderRadius: 13, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  actionText: { color: colors.ink, fontSize: 14, fontWeight: "700" },
-  chevron: { color: colors.muted, fontSize: 22 },
+  actionList: { flexShrink: 1 },
+  actions: { gap: 8, paddingVertical: 2 },
+  actionButton: { width: "100%", minHeight: 50, borderRadius: 13, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  actionButtonPressed: { backgroundColor: colors.greenWash, borderColor: colors.green },
+  actionText: { flex: 1, minWidth: 0, color: colors.ink, fontSize: 14, fontWeight: "700" },
+  chevron: { flexShrink: 0, color: colors.muted, fontSize: 22 },
   deleteText: { color: colors.red },
   form: { gap: 12 },
   label: { color: colors.ink, fontSize: 13, fontWeight: "700" },

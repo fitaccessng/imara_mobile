@@ -319,7 +319,7 @@ export default function WorkspaceFilesScreen() {
                       <View style={styles.copy}><Text numberOfLines={1} style={styles.rowTitle}>{folder.name}</Text><Text style={styles.body}>Shared folder</Text></View>
                       <Text style={styles.chevron}>›</Text>
                     </Pressable>
-                    {canManageFolder ? <Pressable accessibilityLabel={`Manage ${folder.name}`} onPress={() => { setSelectedFolder(folder); setDraftName(folder.name); }} style={styles.more}><Text style={styles.moreText}>•••</Text></Pressable> : null}
+                    {canManageFolder ? <Pressable accessibilityRole="button" accessibilityLabel={`More actions for ${folder.name}`} onPress={() => { setSelectedFolder(folder); setDraftName(folder.name); }} style={({ pressed }) => [styles.more, pressed ? styles.morePressed : null]}><Text style={styles.moreText}>More</Text></Pressable> : null}
                   </View>
                 );
               })}
@@ -330,10 +330,9 @@ export default function WorkspaceFilesScreen() {
                     <Text numberOfLines={1} style={styles.rowTitle}>{file.name}</Text>
                     <Text style={styles.body}>{formatBytes(Number(file.sizeBytes))} · {formatDate(file.createdAt)}</Text>
                   </Pressable>
-                  {canDownload ? <Pressable accessibilityLabel={`Preview ${file.name}`} onPress={() => void downloadFile(file, true)} style={styles.quickAction}><Text style={styles.quickActionText}>Open</Text></Pressable> : null}
-                  {(canRenameFiles || canMoveFiles || canDeleteFiles || canShareFiles) ? (
-                    <Pressable accessibilityLabel={`More actions for ${file.name}`} onPress={() => { setSelectedFile(file); setActionMode("actions"); setDraftName(file.name); }} style={styles.more}>
-                      <Text style={styles.moreText}>•••</Text>
+                  {(canDownload || canRenameFiles || canMoveFiles || canDeleteFiles || canShareFiles) ? (
+                    <Pressable accessibilityRole="button" accessibilityLabel={`More actions for ${file.name}`} onPress={() => { setSelectedFile(file); setActionMode("actions"); setDraftName(file.name); }} style={({ pressed }) => [styles.more, pressed ? styles.morePressed : null]}>
+                      <Text style={styles.moreText}>More</Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -354,14 +353,20 @@ export default function WorkspaceFilesScreen() {
             <Text numberOfLines={2} style={styles.sheetTitle}>{selectedFile?.name}</Text>
             <Text style={styles.sheetMeta}>{selectedFile?.mimeType} · {formatBytes(Number(selectedFile?.sizeBytes))}</Text>
             {actionMode === "actions" ? (
-              <View style={styles.sheetActions}>
+              <ScrollView
+                contentContainerStyle={styles.sheetActions}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+                style={styles.sheetActionScroll}
+              >
                 {canDownload ? <SheetAction label={downloadingFileId === selectedFile?.id ? "Opening…" : "Preview file"} onPress={() => selectedFile && void downloadFile(selectedFile, true)} disabled={Boolean(downloadingFileId)} /> : null}
                 {canDownload ? <SheetAction label="Download / share file" onPress={() => selectedFile && void downloadFile(selectedFile, false)} disabled={Boolean(downloadingFileId)} /> : null}
                 {canShareFiles ? <SheetAction label="Manage public share links" onPress={() => { setSharingFile(selectedFile); setSelectedFile(null); }} /> : null}
                 {!workspaceRestricted && canRenameFiles ? <SheetAction label="Rename file" onPress={() => { setActionMode("rename"); setActionError(""); }} /> : null}
                 {!workspaceRestricted && canMoveFiles ? <SheetAction label="Move file" onPress={() => { setDestinationFolderId(selectedFile?.folderId ?? null); setActionMode("move"); setActionError(""); }} /> : null}
                 {!workspaceRestricted && canDeleteFiles ? <SheetAction danger label="Delete file permanently" onPress={confirmDeleteFile} /> : null}
-              </View>
+              </ScrollView>
             ) : actionMode === "rename" ? (
               <View style={styles.editor}>
                 <Text style={styles.label}>New file name</Text>
@@ -406,7 +411,13 @@ export default function WorkspaceFilesScreen() {
             <View style={styles.grabber} />
             <Text style={styles.eyebrow}>FOLDER CONTROLS</Text>
             <Text numberOfLines={1} style={styles.sheetTitle}>{selectedFolder?.name}</Text>
-            <View style={styles.editor}>
+            <ScrollView
+              contentContainerStyle={styles.editor}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={false}
+              style={styles.sheetActionScroll}
+            >
               {!workspaceRestricted && canRenameSelectedFolder ? (
                 <>
                   <Text style={styles.label}>Rename folder</Text>
@@ -418,7 +429,7 @@ export default function WorkspaceFilesScreen() {
               ) : null}
               {!workspaceRestricted && canDeleteSelectedFolder ? <SheetAction danger label="Delete empty folder" onPress={confirmDeleteFolder} /> : null}
               {isAdministrator && !workspaceRestricted && selectedFolder ? <Link href={`/(app)/workspace-team` as any} asChild><Pressable style={styles.sheetAction}><Text style={styles.sheetActionText}>Manage folder sharing</Text><Text style={styles.chevron}>›</Text></Pressable></Link> : null}
-            </View>
+            </ScrollView>
             {actionError ? <Text accessibilityRole="alert" style={styles.error}>{actionError}</Text> : null}
             <Pressable onPress={() => setSelectedFolder(null)} style={styles.close}><Text style={styles.cancelText}>Close</Text></Pressable>
           </View>
@@ -441,7 +452,7 @@ function State({ title, detail, retry }: { title: string; detail?: string; retry
 
 function SheetAction({ label, onPress, disabled = false, danger = false }: { label: string; onPress?: () => void; disabled?: boolean; danger?: boolean }) {
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={styles.sheetAction}>
+    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.sheetAction, pressed && !disabled ? styles.sheetActionPressed : null]}>
       <Text style={[styles.sheetActionText, danger ? styles.danger : null]}>{label}</Text><Text style={[styles.chevron, danger ? styles.danger : null]}>›</Text>
     </Pressable>
   );
@@ -488,7 +499,7 @@ function message(error: unknown): string {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  page: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 22, paddingTop: 20, paddingBottom: 36, gap: 15 },
+  page: { width: "100%", maxWidth: 620, alignSelf: "center", paddingHorizontal: 22, paddingTop: 20, paddingBottom: 64, gap: 15 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   kicker: { color: colors.greenDark, fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
   title: { color: colors.ink, fontSize: 30, lineHeight: 36, fontWeight: "700", marginTop: 6 },
@@ -513,19 +524,18 @@ const styles = StyleSheet.create({
   error: { color: colors.red, fontSize: 13, lineHeight: 19 },
   downloadStatus: { color: colors.greenDark, fontSize: 12, fontWeight: "700" },
   list: { gap: 10 },
-  row: { backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, borderRadius: 16, padding: 11, flexDirection: "row", alignItems: "center", gap: 9 },
-  openRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
-  badge: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.greenWash, alignItems: "center", justifyContent: "center" },
+  row: { width: "100%", minWidth: 0, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, borderRadius: 16, padding: 11, flexDirection: "row", alignItems: "center", gap: 9 },
+  openRow: { flex: 1, minWidth: 0, flexShrink: 1, flexDirection: "row", alignItems: "center", gap: 10 },
+  badge: { width: 40, height: 40, flexShrink: 0, borderRadius: 12, backgroundColor: colors.greenWash, alignItems: "center", justifyContent: "center" },
   folderBadge: { backgroundColor: colors.sand },
   badgeText: { color: colors.greenDark, fontSize: 8, fontWeight: "800", letterSpacing: 0.3 },
-  copy: { flex: 1, gap: 4 },
+  copy: { flex: 1, minWidth: 0, flexShrink: 1, gap: 4 },
   rowTitle: { color: colors.ink, fontSize: 13, fontWeight: "700" },
   body: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  chevron: { color: colors.muted, fontSize: 20 },
-  more: { minWidth: 32, alignItems: "center", paddingVertical: 6 },
-  moreText: { color: colors.muted, fontSize: 15 },
-  quickAction: { paddingHorizontal: 9, paddingVertical: 7, backgroundColor: colors.greenWash, borderRadius: 9 },
-  quickActionText: { color: colors.greenDark, fontSize: 10, fontWeight: "700" },
+  chevron: { flexShrink: 0, color: colors.muted, fontSize: 20 },
+  more: { minWidth: 54, minHeight: 44, flexShrink: 0, alignItems: "center", justifyContent: "center", paddingHorizontal: 10, backgroundColor: colors.greenWash, borderRadius: 12, borderWidth: 1, borderColor: colors.line },
+  morePressed: { borderColor: colors.green },
+  moreText: { color: colors.greenDark, fontSize: 12, fontWeight: "700" },
   state: { alignItems: "center", padding: 24, gap: 9 },
   stateTitle: { color: colors.ink, fontSize: 15, fontWeight: "700", textAlign: "center" },
   retry: { backgroundColor: colors.greenWash, borderRadius: 10, paddingHorizontal: 13, paddingVertical: 8 },
@@ -533,14 +543,16 @@ const styles = StyleSheet.create({
   backButton: { backgroundColor: colors.ink, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
   backText: { color: colors.surface, fontSize: 14, fontWeight: "700" },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(12, 31, 24, 0.42)" },
-  sheet: { maxHeight: "92%", backgroundColor: colors.background, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24, gap: 10 },
+  sheet: { width: "100%", maxHeight: "90%", backgroundColor: colors.background, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24, gap: 10 },
   grabber: { width: 42, height: 4, borderRadius: 4, backgroundColor: colors.line, alignSelf: "center", marginBottom: 3 },
   eyebrow: { color: colors.greenDark, fontSize: 10, fontWeight: "800", letterSpacing: 1.2 },
   sheetTitle: { color: colors.ink, fontSize: 21, lineHeight: 27, fontWeight: "700" },
   sheetMeta: { color: colors.muted, fontSize: 12 },
-  sheetActions: { gap: 7, marginTop: 6 },
-  sheetAction: { minHeight: 44, borderRadius: 12, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sheetActionText: { color: colors.ink, fontSize: 13, fontWeight: "700" },
+  sheetActionScroll: { flexShrink: 1 },
+  sheetActions: { gap: 8, paddingTop: 6, paddingBottom: 4 },
+  sheetAction: { width: "100%", minHeight: 48, borderRadius: 13, backgroundColor: colors.surface, borderColor: colors.line, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sheetActionPressed: { backgroundColor: colors.greenWash, borderColor: colors.green },
+  sheetActionText: { flex: 1, minWidth: 0, color: colors.ink, fontSize: 13, fontWeight: "700" },
   danger: { color: colors.red },
   editor: { gap: 11, marginTop: 4 },
   label: { color: colors.ink, fontSize: 12, fontWeight: "700" },
