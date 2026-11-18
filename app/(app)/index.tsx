@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ApiError } from "@/api/client";
+import { getDashboard, getSubscription } from "@/account/api";
 import { getCurrentUser, signOut } from "@/auth/auth-api";
 import { useAuthStore } from "@/auth/auth-store";
 import { BrandMark, Notice, PrimaryButton, TextLink } from "@/ui/components";
@@ -42,6 +43,14 @@ export default function HomeScreen() {
     queryFn: getCurrentUser,
     initialData: user ?? undefined,
     staleTime: 60_000,
+  });
+  const dashboard = useQuery({
+    queryKey: ["dashboard", "summary", user?.id],
+    queryFn: getDashboard,
+  });
+  const subscription = useQuery({
+    queryKey: ["subscription", user?.id],
+    queryFn: getSubscription,
   });
 
   useEffect(() => {
@@ -95,12 +104,12 @@ export default function HomeScreen() {
 
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>18</Text>
-          <Text style={styles.summaryLabel}>Files this week</Text>
+          <Text style={styles.summaryValue}>{dashboard.isPending ? "—" : dashboard.data?.fileCount ?? "0"}</Text>
+          <Text style={styles.summaryLabel}>Total files</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>04</Text>
-          <Text style={styles.summaryLabel}>Awaiting review</Text>
+          <Text style={styles.summaryValue}>{dashboard.isPending ? "—" : dashboard.data?.folderCount ?? "0"}</Text>
+          <Text style={styles.summaryLabel}>Folders</Text>
         </View>
       </View>
 
@@ -125,48 +134,55 @@ export default function HomeScreen() {
           </Link>
         </View>
         <View style={styles.listBlock}>
-          {recentItems.map((item) => (
-            <View key={`${item.name}-${item.meta}`} style={styles.listItem}>
-              <View style={[styles.listIcon, { backgroundColor: item.accent }]} />
-              <View style={styles.listCopy}>
-                <Text style={styles.listTitle}>{item.name}</Text>
-                <Text style={styles.listMeta}>{item.meta}</Text>
+          {dashboard.isPending ? (
+            <Text style={styles.footer}>Loading recent work…</Text>
+          ) : dashboard.isError ? (
+            <TextLink title="Retry recent work" onPress={() => void dashboard.refetch()} />
+          ) : (() => {
+            const files = dashboard.data?.recentFiles ?? [];
+            const folders = dashboard.data?.recentFolders ?? [];
+            const combined = [
+              ...files.map((item) => ({ id: item.id, name: item.name, meta: item.mimeType, tag: "FILE", accent: colors.greenWash })),
+              ...folders.map((item) => ({ id: item.id, name: item.name, meta: item.createdAt, tag: "FOLDER", accent: colors.sand })),
+            ].sort((a, b) => String(b.meta).localeCompare(String(a.meta))).slice(0, 6);
+            return combined.length ? combined.map((item) => (
+              <View key={`${item.tag}-${item.id}`} style={styles.listItem}>
+                <View style={[styles.listIcon, { backgroundColor: item.accent }]} />
+                <View style={styles.listCopy}>
+                  <Text numberOfLines={1} style={styles.listTitle}>{item.name}</Text>
+                  <Text style={styles.listMeta}>{item.tag === "FOLDER" ? "Recently updated folder" : item.meta}</Text>
+                </View>
+                <Text style={styles.listTag}>{item.tag}</Text>
               </View>
-              <Text style={styles.listTag}>{item.tag}</Text>
-            </View>
-          ))}
+            )) : <Text style={styles.footer}>No recently worked-on files or folders yet.</Text>;
+          })()}
         </View>
       </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Upcoming</Text>
+          <Text style={styles.sectionTitle}>Today</Text>
           <Link href="/(app)/calendar" asChild>
             <Pressable>
-              <Text style={styles.sectionAction}>Open</Text>
+              <Text style={styles.sectionAction}>Open calendar</Text>
             </Pressable>
           </Link>
         </View>
         <View style={styles.timeline}>
-          {upcomingEvents.map((event) => (
-            <View key={event.title} style={styles.timelineItem}>
-              <View style={styles.timelineDot} />
-              <View style={styles.timelineBody}>
-                <Text style={styles.timelineTitle}>{event.title}</Text>
-                <Text style={styles.timelineDetail}>{event.detail}</Text>
-              </View>
-              <Text style={styles.timelineStatus}>{event.status}</Text>
+          <View style={styles.timelineItem}>
+            <View style={styles.timelineDot} />
+            <View style={styles.timelineBody}>
+              <Text style={styles.timelineTitle}>Review your calendar</Text>
+              <Text style={styles.timelineDetail}>Open today’s plan, events and reminders.</Text>
             </View>
-          ))}
+          </View>
         </View>
       </View>
 
       <View style={styles.phaseCard}>
-        <Text style={styles.phaseTag}>PHASE 2 · PERSONAL WORKSPACE</Text>
-        <Text style={styles.phaseTitle}>Your mobile workspace is live.</Text>
-        <Text style={styles.phaseBody}>
-          Overview, recent files, and calendar activity now reflect the same permission-aware structure as IMARA’s web workspace.
-        </Text>
+        <Text style={styles.phaseTag}>YOUR ACCOUNT</Text>
+        <Text style={styles.phaseTitle}>{subscription.isPending ? "Checking plan…" : `${subscription.data?.plan ?? "FREE"} plan`}</Text>
+        <Text style={styles.phaseBody}>Account features and storage limits follow your server-provided subscription status.</Text>
         <View style={styles.phaseRule} />
         <Text style={styles.phaseFootnote}>Connected to your IMARA account · Permission-aware layout</Text>
       </View>

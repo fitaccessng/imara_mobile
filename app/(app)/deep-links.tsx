@@ -33,6 +33,10 @@ export default function DeepLinksScreen() {
         </Link>
       ))}
       <View style={styles.notice}>
+        <Text style={styles.noticeTitle}>Website token mapping</Text>
+        <Text style={styles.detail}>/workspace/invitations/accept, /share/:token, /respond/:token, /request/:token, /capture/:token and /gallery/:token are assigned to dedicated mobile routes. Expo receives the final token parameter at the app route boundary.</Text>
+      </View>
+      <View style={styles.notice}>
         <Text style={styles.noticeTitle}>Production association still required</Text>
         <Text style={styles.detail}>Universal Links/App Links for website email URLs need domain association files and native build configuration. This screen does not claim that external domains are associated.</Text>
       </View>

@@ -13,14 +13,21 @@ store.
 **Phase 1 — mobile foundation and authentication: implemented; native cookie
 validation still pending.**
 
-**Phase 2 — personal workspace: screen shells exist; API-backed files, folders,
-calendar, and real dashboard data remain incomplete.**
+**Phase 2 — personal workspace: personal file/folder browsing, native preview and
+download, public sharing, folder management, search, favourites, trash, and smart
+file organization now use existing APIs. Personal and shared calendar screens are
+connected to existing event APIs; real dashboard data remains incomplete.
+Personal file rename and move are not supported by the current API.**
 
-**Phase 3 — business workspace: screen shells exist; workspace selection,
-storage, team administration, and activity still need end-to-end integration.**
+**Phase 3 — business workspace: shared-file storage and core team administration
+are connected to existing APIs, including invitations, member lifecycle, member
+activity, folder permission rules, and private file deliveries. Device and role-specific end-to-end
+verification is pending; invitation acceptance and role management remain.**
 
-**Phase 4 — productivity: signature, approval, and reminder screen shells exist;
-their consequential workflows are not yet integrated.**
+**Phase 4 — productivity: calendars, reminders, approval workflows, typed/drawn
+signature requests/signing, embedded PDF preview, and authenticated document sharing
+are connected to existing APIs. Native touch/PDF rendering and role-specific device
+verification remain.**
 
 **Phase 5 — communications: live personal notifications, announcements, and
 workspace REST chat are integrated. Chat refreshes by polling because the API
@@ -30,13 +37,16 @@ does not provide realtime transport.**
 biometric checks, document capture, and a SQLite-backed local scan queue are
 implemented. Native device validation remains pending.**
 
-**Feature parity: incomplete.** The current screens do not yet provide full
-website parity. Use [PAGE_PARITY_CHECKLIST.md](./PAGE_PARITY_CHECKLIST.md) as the
-source of truth; sample-data screens are explicitly marked Shell only.
+**Feature parity: continuing.** Public token routes and additional personal/account/productivity routes now exist, but live API/device verification and remaining public marketing, document tools, and native UI gaps are still incomplete.
+website parity. Use [IMARA_MOBILE_PARITY.md](./IMARA_MOBILE_PARITY.md) for the
+route/API/test matrix and [PAGE_PARITY_CHECKLIST.md](./PAGE_PARITY_CHECKLIST.md)
+for interaction-level follow-up; sample-data screens are explicitly marked
+Shell only.
 
 - [System architecture report](./ARCHITECTURE.md)
 - [Implemented API inventory](./API_INVENTORY.md)
 - [Web-to-mobile page parity checklist](./PAGE_PARITY_CHECKLIST.md)
+- [Full website route and feature parity tracker](./IMARA_MOBILE_PARITY.md)
 
 The standalone Expo application now has Expo Router navigation, a typed API
 client, TanStack Query, Zustand session state, and native sign-in, registration,
@@ -64,8 +74,10 @@ implemented by the current API contract.
 ## Running the mobile app
 
 1. Copy `.env.example` to `.env` and set `EXPO_PUBLIC_API_URL` to the existing
-   IMARA API base URL (including `/api/v1`). If the backend uses a non-default
-   session cookie name, also set `EXPO_PUBLIC_SESSION_COOKIE_NAME`.
+   IMARA API base URL (including `/api/v1`) and `EXPO_PUBLIC_WEB_URL` to the
+   existing website origin. Public file-share links use that website origin. If
+   the backend uses a non-default session cookie name, also set
+   `EXPO_PUBLIC_SESSION_COOKIE_NAME`.
 2. Run `cd mobile && npm install`.
 3. Build a native development client with `npx expo run:ios` or
    `npx expo run:android`. Expo Go is not supported because the native cookie
@@ -78,17 +90,19 @@ Expo account and are not configured yet.
 
 ## Current validation baseline
 
-- `npm test --prefix mobile` — 16 auth/session and communications API tests pass.
+- `npm test --prefix mobile` — 22 auth/session, communications, and file API tests pass.
 - `npm run typecheck --prefix mobile` — passes.
 - `npx expo install --check` — dependencies match SDK 58.
 - `EXPO_PUBLIC_API_URL=... npm run export --prefix mobile` — iOS and Android
   JavaScript bundles pass. These are not signed native app builds.
 - `npm run build --workspace @imara/web` — existing website build passes.
 
-No Android device/emulator is attached, no iOS device/simulator validation was
-performed, and no real account credentials were used. Therefore login cookie
-capture, app-restart persistence, and logout/revocation remain unverified on
-native platforms. Expo EAS project linking and signed builds are also pending.
+No Android device/emulator is attached. iOS simulators are available, but the
+local iOS development build currently fails in `expo-modules-jsi` with Swift
+strict-concurrency diagnostics; native rendering, cookie capture and live account
+workflows have not yet been verified on a launched app. Expo EAS project linking,
+signed builds and cloud builds are also pending because the workspace is not
+logged into Expo and no `EXPO_TOKEN` is configured.
 
 `npm audit --omit=dev` reports three moderate findings in Expo's transitive
 `@expo/fingerprint`/`minimatch` build tooling. npm's proposed fix downgrades the

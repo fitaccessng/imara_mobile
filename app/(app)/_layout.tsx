@@ -31,11 +31,18 @@ export default function AppLayout() {
       <Tabs.Screen name="communications" options={{ title: "Messages" }} />
       <Tabs.Screen name="calendar" options={{ title: "Calendar" }} />
       <Tabs.Screen name="all-pages" options={{ href: null }} />
+      <Tabs.Screen name="workspace-calendar" options={{ href: null }} />
       <Tabs.Screen name="notification-settings" options={{ href: null }} />
       <Tabs.Screen name="biometric" options={{ href: null }} />
       <Tabs.Screen name="deep-links" options={{ href: null }} />
       <Tabs.Screen name="workspace-files" options={{ href: null }} />
+      <Tabs.Screen name="workspace-file-deliveries" options={{ href: null }} />
       <Tabs.Screen name="workspace-team" options={{ href: null }} />
+      <Tabs.Screen name="workspace-invite" options={{ href: null }} />
+      <Tabs.Screen name="workspace-invitations" options={{ href: null }} />
+      <Tabs.Screen name="workspace-activity" options={{ href: null }} />
+      <Tabs.Screen name="workspace-member/[memberId]" options={{ href: null }} />
+      <Tabs.Screen name="workspace-member/[memberId]/permissions" options={{ href: null }} />
       <Tabs.Screen name="workspace-chat" options={{ href: null }} />
       <Tabs.Screen name="workspace-approvals" options={{ href: null }} />
       <Tabs.Screen name="signatures" options={{ href: null }} />
@@ -48,6 +55,18 @@ export default function AppLayout() {
       <Tabs.Screen name="offline-support" options={{ href: null }} />
       <Tabs.Screen name="native-support" options={{ href: null }} />
       <Tabs.Screen name="scan" options={{ href: null }} />
+      <Tabs.Screen name="file-favorites" options={{ href: null }} />
+      <Tabs.Screen name="file-trash" options={{ href: null }} />
+      <Tabs.Screen name="file-search" options={{ href: null }} />
+      <Tabs.Screen name="smart-files" options={{ href: null }} />
+      <Tabs.Screen name="notes" options={{ href: null }} />
+      <Tabs.Screen name="support" options={{ href: null }} />
+      <Tabs.Screen name="account-settings" options={{ href: null }} />
+      <Tabs.Screen name="billing" options={{ href: null }} />
+      <Tabs.Screen name="documents" options={{ href: null }} />
+      <Tabs.Screen name="file-requests" options={{ href: null }} />
+      <Tabs.Screen name="events" options={{ href: null }} />
+      <Tabs.Screen name="document-tools" options={{ href: null }} />
     </Tabs>
   );
 }

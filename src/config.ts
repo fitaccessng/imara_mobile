@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 
 type AppExtra = {
   apiUrl?: string;
+  webUrl?: string;
   sessionCookieName?: string;
 };
 
@@ -39,6 +40,26 @@ export function getApiBaseUrl(): string {
 
 export function getApiOrigin(): string {
   return new URL(getApiBaseUrl()).origin;
+}
+
+export function getWebBaseUrl(): string {
+  const configuredUrl = extra?.webUrl?.trim();
+  if (!configuredUrl) {
+    throw new Error("Set EXPO_PUBLIC_WEB_URL in mobile/.env before creating public links.");
+  }
+  let url: URL;
+  try {
+    url = new URL(configuredUrl);
+  } catch {
+    throw new Error("EXPO_PUBLIC_WEB_URL must be an absolute URL.");
+  }
+  if (url.protocol !== "https:" && !__DEV__) {
+    throw new Error("IMARA mobile requires HTTPS for public links outside development builds.");
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error("EXPO_PUBLIC_WEB_URL must not contain credentials, query parameters, or a fragment.");
+  }
+  return configuredUrl.replace(/\/+$/, "");
 }
 
 export function getApiSessionStorageKey(): string {

@@ -13,6 +13,7 @@ const stats = [
 
 const quickLinks = [
   { label: "Shared files", route: "/(app)/workspace-files" },
+  { label: "Private deliveries", route: "/(app)/workspace-file-deliveries" },
   { label: "Team access", route: "/(app)/workspace-team" },
   { label: "Chat", route: "/(app)/workspace-chat" },
   { label: "Approvals", route: "/(app)/workspace-approvals" },

@@ -11,9 +11,11 @@ const config: ExpoConfig = {
   newArchEnabled: true,
   plugins: [
     "expo-router",
+    "expo-sharing",
     "expo-secure-store",
     "expo-splash-screen",
     "expo-sqlite",
+    "react-native-blob-util",
     [
       "expo-camera",
       {
@@ -40,14 +42,37 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "space.useimara.mobile",
     supportsTablet: true,
+    associatedDomains: ["applinks:www.useimara.space", "applinks:useimara.space"],
   },
   android: {
     package: "space.useimara.mobile",
     predictiveBackGestureEnabled: true,
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/workspace/invitations/accept" },
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/share" },
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/respond" },
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/request" },
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/capture" },
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/gallery" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/workspace/invitations/accept" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/share" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/respond" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/request" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/capture" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/gallery" },
+        ],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
     blockedPermissions: ["android.permission.RECORD_AUDIO"],
   },
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    webUrl: process.env.EXPO_PUBLIC_WEB_URL,
     sessionCookieName: process.env.EXPO_PUBLIC_SESSION_COOKIE_NAME ?? "imara_session",
     eas: {
       projectId: process.env.EAS_PROJECT_ID,

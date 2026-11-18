@@ -31,6 +31,13 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(app)" />
+          <Stack.Screen name="invite" />
+          <Stack.Screen name="share" />
+          <Stack.Screen name="respond" />
+          <Stack.Screen name="request" />
+          <Stack.Screen name="capture" />
+          <Stack.Screen name="gallery" />
+          <Stack.Screen name="marketing" />
         </Stack>
       </QueryClientProvider>
     </GestureHandlerRootView>

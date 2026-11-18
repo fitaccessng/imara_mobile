@@ -18,10 +18,20 @@ export interface AnnouncementItem {
   createdAt: string;
 }
 
+export interface WorkspaceSubscriptionLifecycle {
+  state: "ACTIVE" | "GRACE" | "RESTRICTED" | "FREE";
+  plan: "FREE" | "PRO" | "BUSINESS";
+  currentPeriodEnd: string | null;
+  graceEndsAt: string | null;
+  graceDaysRemaining: number;
+  restricted: boolean;
+}
+
 export interface WorkspaceItem {
   id: string;
   name: string;
   role: string;
+  subscription?: WorkspaceSubscriptionLifecycle;
 }
 
 export interface ChatConversation {
