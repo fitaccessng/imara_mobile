@@ -11,6 +11,19 @@ const config: ExpoConfig = {
   newArchEnabled: true,
   plugins: [
     "expo-router",
+    [
+      "expo-audio",
+      {
+        microphonePermission: "Allow IMARA to record meetings and dictate notes on this device.",
+      },
+    ],
+    [
+      "expo-speech-recognition",
+      {
+        microphonePermission: "Allow IMARA to dictate notes on this device.",
+        speechRecognitionPermission: "Allow IMARA to turn your speech into text on this device.",
+      },
+    ],
     "expo-sharing",
     "expo-secure-store",
     "expo-splash-screen",
@@ -58,17 +71,18 @@ const config: ExpoConfig = {
           { scheme: "https", host: "www.useimara.space", pathPrefix: "/request" },
           { scheme: "https", host: "www.useimara.space", pathPrefix: "/capture" },
           { scheme: "https", host: "www.useimara.space", pathPrefix: "/gallery" },
+          { scheme: "https", host: "www.useimara.space", pathPrefix: "/form" },
           { scheme: "https", host: "useimara.space", pathPrefix: "/workspace/invitations/accept" },
           { scheme: "https", host: "useimara.space", pathPrefix: "/share" },
           { scheme: "https", host: "useimara.space", pathPrefix: "/respond" },
           { scheme: "https", host: "useimara.space", pathPrefix: "/request" },
           { scheme: "https", host: "useimara.space", pathPrefix: "/capture" },
           { scheme: "https", host: "useimara.space", pathPrefix: "/gallery" },
+          { scheme: "https", host: "useimara.space", pathPrefix: "/form" },
         ],
         category: ["BROWSABLE", "DEFAULT"],
       },
     ],
-    blockedPermissions: ["android.permission.RECORD_AUDIO"],
   },
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL,

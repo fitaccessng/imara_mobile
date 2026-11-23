@@ -18,7 +18,13 @@ export type CalendarEvent = {
   reminderMinutesBefore: number | null;
   taggedUsers?: CalendarPerson[];
   taggedUserIds?: string[];
-};
+  linkedFileId?: string | null;
+  linkedTaskId?: string | null;
+  linkedMeetingId?: string | null;
+  linkedFile?: { id: string; originalName: string; name?: string; mimeType: string; sizeBytes: string } | null;
+  linkedTask?: { id: string; title: string; status: string; progress: number; dueAt: string | null } | null;
+  linkedMeeting?: { id: string; title: string; startedAt: string | null; endedAt: string | null } | null;
+}
 
 export type CalendarEventInput = {
   title: string;
@@ -28,6 +34,8 @@ export type CalendarEventInput = {
   allDay: boolean;
   reminderMinutesBefore: number | null;
   taggedUserIds?: string[];
+  linkedFileId?: string | null;
+  linkedTaskId?: string | null;
 };
 
 export function getCalendarEvents(workspaceId?: string): Promise<CalendarEvent[]> {

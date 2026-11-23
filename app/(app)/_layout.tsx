@@ -60,6 +60,9 @@ export default function AppLayout() {
       <Tabs.Screen name="file-search" options={{ href: null }} />
       <Tabs.Screen name="smart-files" options={{ href: null }} />
       <Tabs.Screen name="notes" options={{ href: null }} />
+      <Tabs.Screen name="tasks" options={{ href: null }} />
+      <Tabs.Screen name="meetings" options={{ href: null }} />
+      <Tabs.Screen name="forms" options={{ href: null }} />
       <Tabs.Screen name="support" options={{ href: null }} />
       <Tabs.Screen name="account-settings" options={{ href: null }} />
       <Tabs.Screen name="billing" options={{ href: null }} />

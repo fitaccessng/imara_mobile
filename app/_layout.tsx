@@ -37,6 +37,7 @@ export default function RootLayout() {
           <Stack.Screen name="request" />
           <Stack.Screen name="capture" />
           <Stack.Screen name="gallery" />
+          <Stack.Screen name="form/[token]" />
           <Stack.Screen name="marketing" />
         </Stack>
       </QueryClientProvider>

@@ -5,6 +5,9 @@ import { BrandMark } from "@/ui/components";
 import { colors } from "@/ui/theme";
 
 const toolCards = [
+  { title: "IMARA Tasks", route: "/(app)/tasks", detail: "Assign work, set deadlines and attach files" },
+  { title: "Meeting Room", route: "/(app)/meetings", detail: "Record meetings and track decisions and action items" },
+  { title: "Workspace Forms", route: "/(app)/forms", detail: "Build shareable forms and collect responses" },
   { title: "Signatures", route: "/(app)/signatures", detail: "Review and sign documents" },
   { title: "Approvals", route: "/(app)/approval-workflow", detail: "Track review decisions" },
   { title: "Reminders", route: "/(app)/reminders", detail: "Stay on top of follow-ups" },
@@ -20,11 +23,6 @@ export default function ProductivityScreen() {
           <Text style={styles.title}>Workflows & follow-ups</Text>
         </View>
         <BrandMark />
-      </View>
-
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryValue}>12</Text>
-        <Text style={styles.summaryLabel}>Items needing action this week</Text>
       </View>
 
       <View style={styles.grid}>

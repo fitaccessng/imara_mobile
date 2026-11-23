@@ -5,6 +5,8 @@ import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Tex
 
 import { useAuthStore } from "@/auth/auth-store";
 import { deleteCalendarEvent, getCalendarEvents, saveCalendarEvent, type CalendarEvent } from "@/calendar/api";
+import { getPersonalFiles, getWorkspaceFileListing, type PersonalFile, type WorkspaceFile } from "@/files/api";
+import { getTasks, type ProductivityTask } from "@/productivity/api";
 import type { WorkspaceItem } from "@/communications/api";
 import { getWorkspaceChoices, getWorkspaceMembers, type WorkspaceMember } from "@/workspaces/api";
 import { colors } from "@/ui/theme";
@@ -31,6 +33,8 @@ type EventDraft = {
   allDay: boolean;
   reminderMinutesBefore: number | null;
   taggedUserIds: string[];
+  linkedFileId: string;
+  linkedTaskId: string;
 };
 
 export function CalendarScreen({ shared = false }: { shared?: boolean }) {
@@ -70,6 +74,25 @@ export function CalendarScreen({ shared = false }: { shared?: boolean }) {
     queryFn: () => getWorkspaceMembers(workspaceId!),
     enabled: Boolean(shared && workspaceId && isAdministrator && formOpen),
   });
+  const filesQuery = useQuery<{ files: Array<PersonalFile | WorkspaceFile> }>({
+    queryKey: ["calendar-linked-files", workspaceId ?? "personal"],
+    queryFn: async () => {
+      if (workspaceId) {
+        const listing = await getWorkspaceFileListing(workspaceId, null);
+        return { files: listing.files };
+      }
+      const listing = await getPersonalFiles(null);
+      return { files: listing.files };
+    },
+    enabled: formOpen,
+  });
+  const tasksQuery = useQuery({
+    queryKey: ["productivity-tasks", workspaceId ?? "personal"],
+    queryFn: () => getTasks(workspaceId),
+    enabled: formOpen,
+  });
+  const linkedFiles: Array<PersonalFile | WorkspaceFile> = filesQuery.data?.files ?? [];
+  const linkedTasks = tasksQuery.data ?? [];
 
   const events = eventsQuery.data ?? [];
   const eventsByDay = useMemo(() => indexEventsByDay(events), [events]);
@@ -98,6 +121,8 @@ export function CalendarScreen({ shared = false }: { shared?: boolean }) {
         endsAt: end,
         allDay: draft.allDay,
         reminderMinutesBefore: draft.reminderMinutesBefore,
+        linkedFileId: draft.linkedFileId || null,
+        linkedTaskId: draft.linkedTaskId || null,
         ...(shared ? { taggedUserIds: draft.taggedUserIds } : {}),
       }, workspaceId, editing?.id);
     },
@@ -132,6 +157,8 @@ export function CalendarScreen({ shared = false }: { shared?: boolean }) {
       allDay: event.allDay,
       reminderMinutesBefore: event.reminderMinutesBefore,
       taggedUserIds: event.taggedUserIds ?? event.taggedUsers?.map((member) => member.id) ?? [],
+      linkedFileId: event.linkedFileId ?? "",
+      linkedTaskId: event.linkedTaskId ?? "",
     });
     setFormError("");
     setFormOpen(true);
@@ -245,6 +272,9 @@ export function CalendarScreen({ shared = false }: { shared?: boolean }) {
               <Text style={styles.eventDescription}>{event.allDay ? "All day" : `${timeFormat.format(new Date(event.startsAt))} – ${timeFormat.format(new Date(event.endsAt))}`}</Text>
               {event.reminderMinutesBefore !== null ? <Text style={styles.eventMeta}>{reminderLabel(event.reminderMinutesBefore)} reminder</Text> : null}
               {event.taggedUsers?.length ? <Text style={styles.eventMeta}>Tagged: {event.taggedUsers.map((person) => person.name).join(", ")}</Text> : null}
+              {event.linkedFile ? <Text style={styles.eventMeta}>Document: {event.linkedFile.originalName ?? event.linkedFile.name}</Text> : null}
+              {event.linkedTask ? <Text style={styles.eventMeta}>Task: {event.linkedTask.title}</Text> : null}
+              {event.linkedMeeting ? <Text style={styles.eventMeta}>Meeting: {event.linkedMeeting.title}</Text> : null}
               {shared && event.creator?.name ? <Text style={styles.eventMeta}>Added by {event.creator.name}</Text> : null}
               {canManage ? (
                 <View style={styles.eventActions}>
@@ -270,6 +300,17 @@ export function CalendarScreen({ shared = false }: { shared?: boolean }) {
               <TextInput autoFocus maxLength={200} onChangeText={(title) => updateDraft({ title })} placeholder="e.g. Team planning session" placeholderTextColor={colors.muted} style={styles.input} value={draft.title} />
               <Text style={styles.label}>Details · optional</Text>
               <TextInput multiline maxLength={4000} onChangeText={(description) => updateDraft({ description })} placeholder="Add context or a short note" placeholderTextColor={colors.muted} style={[styles.input, styles.descriptionInput]} value={draft.description} />
+              <Text style={styles.label}>Connect a document</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.workspaceChoices}>
+                <Pressable onPress={() => updateDraft({ linkedFileId: "" })} style={[styles.choice, !draft.linkedFileId && styles.choiceSelected]}><Text style={[styles.choiceText, !draft.linkedFileId && styles.choiceTextSelected]}>None</Text></Pressable>
+                {linkedFiles.map((file) => <Pressable key={file.id} onPress={() => updateDraft({ linkedFileId: file.id })} style={[styles.choice, draft.linkedFileId === file.id && styles.choiceSelected]}><Text style={[styles.choiceText, draft.linkedFileId === file.id && styles.choiceTextSelected]}>{file.name}</Text></Pressable>)}
+              </ScrollView>
+              <Text style={styles.label}>Connect a task</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.workspaceChoices}>
+                <Pressable onPress={() => updateDraft({ linkedTaskId: "" })} style={[styles.choice, !draft.linkedTaskId && styles.choiceSelected]}><Text style={[styles.choiceText, !draft.linkedTaskId && styles.choiceTextSelected]}>None</Text></Pressable>
+                {linkedTasks.map((task: ProductivityTask) => <Pressable key={task.id} onPress={() => updateDraft({ linkedTaskId: task.id })} style={[styles.choice, draft.linkedTaskId === task.id && styles.choiceSelected]}><Text style={[styles.choiceText, draft.linkedTaskId === task.id && styles.choiceTextSelected]}>{task.title}</Text></Pressable>)}
+              </ScrollView>
+              {(filesQuery.isError || tasksQuery.isError) ? <Text accessibilityRole="alert" style={styles.error}>Linked files or tasks couldn’t load.</Text> : null}
               <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: draft.allDay }} onPress={() => updateDraft({ allDay: !draft.allDay })} style={styles.toggleRow}>
                 <View style={[styles.checkbox, draft.allDay ? styles.checkboxActive : null]}><Text style={styles.checkmark}>{draft.allDay ? "✓" : ""}</Text></View>
                 <Text style={styles.label}>All day</Text>
@@ -352,6 +393,8 @@ function createDraft(date: string): EventDraft {
     allDay: false,
     reminderMinutesBefore: 15,
     taggedUserIds: [],
+    linkedFileId: "",
+    linkedTaskId: "",
   };
 }
 
