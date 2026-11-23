@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 import { createNote, deleteNote, getNotes, updateNote, type Note } from "@/notes/api";
@@ -9,6 +10,7 @@ import { getWorkspaces } from "@/communications/api";
 import { colors } from "@/ui/theme";
 
 export default function NotesScreen() {
+  const route = useLocalSearchParams<{ workspaceId?: string }>();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
@@ -22,6 +24,11 @@ export default function NotesScreen() {
   const [dictationError, setDictationError] = useState("");
 
   const workspacesQuery = useQuery({ queryKey: ["workspaces"], queryFn: getWorkspaces });
+  useEffect(() => {
+    if (route.workspaceId && workspacesQuery.data?.some((workspace) => workspace.id === route.workspaceId)) {
+      setWorkspaceId(route.workspaceId);
+    }
+  }, [route.workspaceId, workspacesQuery.data]);
   const notesQuery = useQuery({
     queryKey: ["notes", workspaceId, search],
     queryFn: () => getNotes(search, workspaceId ?? undefined),

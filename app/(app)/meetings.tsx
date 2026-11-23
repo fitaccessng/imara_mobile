@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { File as LocalFile } from "expo-file-system";
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync } from "expo-audio";
 import { useEffect, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { uploadPersonalFile, uploadWorkspaceFile } from "@/files/api";
@@ -11,6 +12,7 @@ import { createMeetingTask, deleteMeeting, getMeetings, saveMeeting, type Meetin
 import { colors } from "@/ui/theme";
 
 export default function MeetingsScreen() {
+  const route = useLocalSearchParams<{ workspaceId?: string }>();
   const queryClient = useQueryClient();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
@@ -31,6 +33,11 @@ export default function MeetingsScreen() {
   const [error, setError] = useState("");
 
   const workspacesQuery = useQuery({ queryKey: ["workspaces"], queryFn: getWorkspaces });
+  useEffect(() => {
+    if (route.workspaceId && workspacesQuery.data?.some((workspace) => workspace.id === route.workspaceId)) {
+      setWorkspaceId(route.workspaceId);
+    }
+  }, [route.workspaceId, workspacesQuery.data]);
   const meetingsQuery = useQuery({
     queryKey: ["productivity-meetings", workspaceId ?? "personal"],
     queryFn: () => getMeetings(workspaceId ?? undefined),

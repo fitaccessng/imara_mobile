@@ -1,6 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { getWorkspaces } from "@/communications/api";
 import { BrandMark } from "@/ui/components";
 import { colors } from "@/ui/theme";
 
@@ -19,6 +22,13 @@ const quickLinks = [
   { label: "Approvals", route: "/(app)/workspace-approvals" },
 ];
 
+const productivityLinks = [
+  { label: "Shared notes", route: "/(app)/notes" },
+  { label: "Shared tasks", route: "/(app)/tasks" },
+  { label: "Meetings", route: "/(app)/meetings" },
+  { label: "Forms", route: "/(app)/forms" },
+];
+
 const activity = [
   { title: "Board pack finalised", detail: "Finance team shared the board pack for review." },
   { title: "New folder added", detail: "Operations created Q4 procurement with inherited access." },
@@ -26,14 +36,72 @@ const activity = [
 ];
 
 export default function WorkspaceOverviewScreen() {
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const workspacesQuery = useQuery({ queryKey: ["workspaces"], queryFn: getWorkspaces });
+  const workspaces = workspacesQuery.data ?? [];
+  const selectedWorkspace = workspaces.find((workspace) => workspace.id === workspaceId) ?? workspaces[0];
+
+  useEffect(() => {
+    if (!workspaceId && workspaces[0]) setWorkspaceId(workspaces[0].id);
+    if (workspaceId && !workspaces.some((workspace) => workspace.id === workspaceId)) {
+      setWorkspaceId(workspaces[0]?.id ?? null);
+    }
+  }, [workspaceId, workspaces]);
+
   return (
     <ScrollView contentContainerStyle={styles.page}>
       <View style={styles.header}>
         <View>
           <Text style={styles.kicker}>BUSINESS WORKSPACE</Text>
-          <Text style={styles.title}>Northstar Studio</Text>
+          <Text style={styles.title}>{selectedWorkspace?.name ?? "Workspace"}</Text>
         </View>
         <BrandMark />
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Quick access</Text>
+          <Text style={styles.sectionAction}>Workspace tools</Text>
+        </View>
+        {workspacesQuery.isPending ? (
+          <Text style={styles.activityDetail}>Loading your business workspaces…</Text>
+        ) : workspacesQuery.isError ? (
+          <Text style={styles.activityDetail}>Business workspace tools couldn’t load. Try again later.</Text>
+        ) : selectedWorkspace ? (
+          <>
+            {workspaces.length > 1 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.workspaceChoices}>
+                {workspaces.map((workspace) => (
+                  <Pressable
+                    key={workspace.id}
+                    onPress={() => setWorkspaceId(workspace.id)}
+                    style={[styles.workspaceChoice, workspace.id === selectedWorkspace.id && styles.workspaceChoiceActive]}
+                  >
+                    <Text style={[styles.workspaceChoiceText, workspace.id === selectedWorkspace.id && styles.workspaceChoiceTextActive]}>
+                      {workspace.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : null}
+            <View style={styles.toolGrid}>
+              {productivityLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={`${link.route}?workspaceId=${encodeURIComponent(selectedWorkspace.id)}` as any}
+                  asChild
+                >
+                  <Pressable style={styles.toolCard}>
+                    <Text style={styles.toolLabel}>{link.label}</Text>
+                    <Text style={styles.toolArrow}>›</Text>
+                  </Pressable>
+                </Link>
+              ))}
+            </View>
+          </>
+        ) : (
+          <Text style={styles.activityDetail}>Join or create a business workspace to use shared productivity tools.</Text>
+        )}
       </View>
 
       <View style={styles.summaryGrid}>
@@ -171,6 +239,30 @@ const styles = StyleSheet.create({
   },
   toolGrid: {
     gap: 10,
+  },
+  workspaceChoices: {
+    gap: 8,
+    paddingBottom: 2,
+  },
+  workspaceChoice: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  workspaceChoiceActive: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenWash,
+  },
+  workspaceChoiceText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  workspaceChoiceTextActive: {
+    color: colors.greenDark,
   },
   toolCard: {
     flexDirection: "row",

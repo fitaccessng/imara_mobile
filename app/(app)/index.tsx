@@ -12,6 +12,8 @@ import { colors, typography } from "@/ui/theme";
 
 const quickActions = [
   { label: "Upload", meta: "New files", href: "/(app)/files" },
+  { label: "Tasks", meta: "Deadlines and progress", href: "/(app)/tasks" },
+  { label: "Meetings", meta: "Notes and action items", href: "/(app)/meetings" },
   { label: "Workspace", meta: "Business tools", href: "/(app)/workspace" },
   { label: "Productivity", meta: "Workflow tools", href: "/(app)/productivity" },
   { label: "Schedule", meta: "Calendar", href: "/(app)/calendar" },

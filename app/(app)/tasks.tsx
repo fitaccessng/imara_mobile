@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { getPersonalFiles, getWorkspaceFileListing, type PersonalFile, type WorkspaceFile } from "@/files/api";
@@ -11,6 +12,7 @@ import { colors } from "@/ui/theme";
 const taskStatuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "BLOCKED", "DONE"];
 
 export default function TasksScreen() {
+  const route = useLocalSearchParams<{ workspaceId?: string }>();
   const queryClient = useQueryClient();
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProductivityTask | null>(null);
@@ -25,6 +27,11 @@ export default function TasksScreen() {
   const [error, setError] = useState("");
 
   const workspacesQuery = useQuery({ queryKey: ["workspaces"], queryFn: getWorkspaces });
+  useEffect(() => {
+    if (route.workspaceId && workspacesQuery.data?.some((workspace) => workspace.id === route.workspaceId)) {
+      setWorkspaceId(route.workspaceId);
+    }
+  }, [route.workspaceId, workspacesQuery.data]);
   const tasksQuery = useQuery({
     queryKey: ["productivity-tasks", workspaceId ?? "personal"],
     queryFn: () => getTasks(workspaceId ?? undefined),
